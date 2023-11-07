@@ -7,6 +7,12 @@ import subprocess
 import os
 import sys
 
+# Add possible paths for tools
+# TODO: Do this a better way
+sys.path.insert(0, '..')
+sys.path.insert(0, 'tools')
+from lib.utils import get_file_in_script_dir, print_diff
+
 parser = argparse.ArgumentParser(allow_abbrev=False,
   description='Verify Exports: Compare the exports of two DLLs.')
 parser.add_argument('original', metavar='original-binary', help='The original binary')
@@ -20,9 +26,6 @@ if not os.path.isfile(args.original):
 
 if not os.path.isfile(args.recompiled):
   parser.error(f'Recompiled binary {args.recompiled} does not exist')
-
-def get_file_in_script_dir(fn):
-  return os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), fn)
 
 def get_exports(file):
   call = [get_file_in_script_dir('DUMPBIN.EXE'), '/EXPORTS']
@@ -54,23 +57,8 @@ og_exp = get_exports(args.original)
 re_exp = get_exports(args.recompiled)
 
 udiff = difflib.unified_diff(og_exp, re_exp)
-has_diff = False
+has_diff = len(udiff) > 0
 
-for line in udiff:
-  has_diff = True
-  color = ''
-  if line.startswith('++') or line.startswith('@@') or line.startswith('--'):
-    # Skip unneeded parts of the diff for the brief view
-    continue
-  # Work out color if we are printing color
-  if not args.no_color:
-    if line.startswith('+'):
-      color = colorama.Fore.GREEN
-    elif line.startswith('-'):
-      color = colorama.Fore.RED
-  print(color + line)
-  # Reset color if we're printing in color
-  if not args.no_color:
-    print(colorama.Style.RESET_ALL, end='')
+print_diff(udiff, plain=args.no_color)
 
 sys.exit(1 if has_diff else 0)

@@ -1,0 +1,5 @@
+1. Both files print the diff, make this a shared function. get_file_in_script_dir function too
+2. Use `with` statements for file operations
+3. Use a proper templating engine (pystache?)
+4. Add black/pylint?
+5. Move stuff around to be easier to understand

@@ -13,6 +13,12 @@ import colorama
 import html
 import re
 
+# Add possible paths for tools
+# TODO: Do this a better way
+sys.path.insert(0, '..')
+sys.path.insert(0, 'tools')
+from lib.utils import get_file_in_script_dir, print_diff
+
 parser = argparse.ArgumentParser(allow_abbrev=False,
   description='Recompilation Compare: compare an original EXE with a recompiled EXE + PDB.')
 parser.add_argument('original', metavar='original-binary', help='The original binary')
@@ -133,9 +139,6 @@ class WinePathConverter:
   @staticmethod
   def _call_winepath_win2unix(fn: str) -> str:
     return subprocess.check_output(['winepath', fn], text=True).strip()
-
-def get_file_in_script_dir(fn):
-  return os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), fn)
 
 # Declare a class that parses the output of cvdump for fast access later
 class SymInfo:
@@ -526,25 +529,7 @@ for subdir, dirs, files in os.walk(source):
                   else:
                     print(f'{addrs}: {recinfo.name} Effective 100%% match. (Differs in register allocation only)\n\n{ok_text} (still differs in register allocation)\n\n')
                 else:
-                  for line in udiff:
-                    if line.startswith('++') or line.startswith('@@') or line.startswith('--'):
-                      # Skip unneeded parts of the diff for the brief view
-                      pass
-                    elif line.startswith('+'):
-                      if plain:
-                        print(line)
-                      else:
-                        print(colorama.Fore.GREEN + line)
-                    elif line.startswith('-'):
-                      if plain:
-                        print(line)
-                      else:
-                        print(colorama.Fore.RED + line)
-                    else:
-                      print(line)
-                    if not plain:
-                      print(colorama.Style.RESET_ALL, end='')
-
+                  print_diff(udiff, plain=plain)
                   print(f'\n{recinfo.name} is only {percenttext} similar to the original, diff above')
 
               # If html, record the diffs to an HTML file
